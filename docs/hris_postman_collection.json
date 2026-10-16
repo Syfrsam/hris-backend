@@ -1,0 +1,341 @@
+{
+  "info": {
+    "name": "HRIS Enterprise Platform API",
+    "description": "Postman Collection for HRIS Enterprise Platform (GPS Attendance, Multi-level Approval, Payroll Engine, DomPDF Digital Payslips).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login (Employee)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Token otomatis tersimpan:', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"employee@hris.local\",\n  \"password\": \"password\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (Manager)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Token otomatis tersimpan:', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager@hris.local\",\n  \"password\": \"password\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (HR Manager)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Token otomatis tersimpan:', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hrmanager@hris.local\",\n  \"password\": \"password\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Authenticated Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Attendance (GPS Geolocation)",
+      "item": [
+        {
+          "name": "Clock-In (HQ Jakarta Within Radius 100m)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": -6.225014,\n  \"longitude\": 106.809657\n}"
+            },
+            "url": { "raw": "{{base_url}}/attendances/clock-in", "host": ["{{base_url}}"], "path": ["attendances", "clock-in"] }
+          }
+        },
+        {
+          "name": "Clock-Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": -6.225014,\n  \"longitude\": 106.809657\n}"
+            },
+            "url": { "raw": "{{base_url}}/attendances/clock-out", "host": ["{{base_url}}"], "path": ["attendances", "clock-out"] }
+          }
+        },
+        {
+          "name": "Today's Attendance Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/attendances/today", "host": ["{{base_url}}"], "path": ["attendances", "today"] }
+          }
+        },
+        {
+          "name": "My Attendance Monthly History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/attendances/my-history?month=2026-10", "host": ["{{base_url}}"], "path": ["attendances", "my-history"], "query": [{ "key": "month", "value": "2026-10" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Leaves & Time-Off",
+      "item": [
+        {
+          "name": "Get Leave Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/leaves/types", "host": ["{{base_url}}"], "path": ["leaves", "types"] }
+          }
+        },
+        {
+          "name": "Get Leave Balances",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/leaves/balances", "host": ["{{base_url}}"], "path": ["leaves", "balances"] }
+          }
+        },
+        {
+          "name": "Apply for Annual Leave (H-3 Notice)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leave_type_id\": 1,\n  \"start_date\": \"2026-10-25\",\n  \"end_date\": \"2026-10-26\",\n  \"reason\": \"Acara keluarga tahunan\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/leaves", "host": ["{{base_url}}"], "path": ["leaves"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Overtime Management",
+      "item": [
+        {
+          "name": "Submit Overtime (Max 4 Hours)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-10-20\",\n  \"start_time\": \"17:00\",\n  \"end_time\": \"19:30\",\n  \"duration_hours\": 2.5,\n  \"task_description\": \"Maintenance server dan deploy rilis baru\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/overtimes", "host": ["{{base_url}}"], "path": ["overtimes"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Two-Step Approvals (Manager / HR)",
+      "item": [
+        {
+          "name": "Get Pending Leaves for Review",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/approvals/leaves", "host": ["{{base_url}}"], "path": ["approvals", "leaves"] }
+          }
+        },
+        {
+          "name": "Approve Leave Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Disetujui.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/approvals/leaves/1/approve", "host": ["{{base_url}}"], "path": ["approvals", "leaves", "1", "approve"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Payroll & Digital Payslips",
+      "item": [
+        {
+          "name": "Get Payroll Periods",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/payrolls/periods", "host": ["{{base_url}}"], "path": ["payrolls", "periods"] }
+          }
+        },
+        {
+          "name": "Generate Draft Payroll",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/payrolls/periods/1/generate-draft", "host": ["{{base_url}}"], "path": ["payrolls", "periods", "1", "generate-draft"] }
+          }
+        },
+        {
+          "name": "Authorize Payroll (HR Manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/payrolls/periods/1/authorize", "host": ["{{base_url}}"], "path": ["payrolls", "periods", "1", "authorize"] }
+          }
+        },
+        {
+          "name": "Get My Payslips",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/payrolls/my-payslips", "host": ["{{base_url}}"], "path": ["payrolls", "my-payslips"] }
+          }
+        },
+        {
+          "name": "Download PDF Digital Payslip",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/payrolls/1/download", "host": ["{{base_url}}"], "path": ["payrolls", "1", "download"] }
+          }
+        }
+      ]
+    }
+  ]
+}
