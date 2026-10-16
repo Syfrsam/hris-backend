@@ -31,11 +31,19 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
+      - name: Setup SQLite Database & Seed Data
+        run: |
+          touch database/database.sqlite
+          php artisan migrate:fresh --seed --force
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
       - name: Execute Automated Tests
         run: php artisan test
         env:
           DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
+          DB_DATABASE: database/database.sqlite
 
       - name: Run Laravel Pint (Code Style Check)
         run: ./vendor/bin/pint --test
