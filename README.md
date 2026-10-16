@@ -1,7 +1,7 @@
 # HRIS Enterprise Backend API
 
 [![CI Test Suite](https://github.com/YOUR_GITHUB_USERNAME/hris-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/hris-backend/actions)
-![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php)
+![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php)
 ![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql)
 ![Pest / PHPUnit](https://img.shields.io/badge/Tests-17%20Passed%20(69%20Assertions)-brightgreen)
@@ -46,7 +46,7 @@ Setiap `git push` atau `Pull Request` ke branch `main` atau `dev` akan memicu ro
 ## 💻 Panduan Instalasi Lokal
 
 ### 1. Kebutuhan Sistem
-- PHP >= 8.2 (ekstensi: `pdo_mysql`, `gd`, `bcmath`, `zip`, `intl`)
+- PHP >= 8.3 (ekstensi: `pdo_mysql`, `gd`, `bcmath`, `zip`, `intl`)
 - Composer >= 2.x
 - MySQL >= 8.0 (misal: Laragon / XAMPP)
 
