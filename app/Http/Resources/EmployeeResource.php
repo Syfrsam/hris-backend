@@ -73,7 +73,7 @@ class EmployeeResource extends JsonResource
                     'contract_number' => $this->activeContract?->contract_number,
                     'contract_type' => $this->activeContract?->contract_type,
                     'basic_salary' => (float) $this->activeContract?->basic_salary,
-                    'document_url' => $this->activeContract?->document_path ? url('storage/'.$this->activeContract->document_path) : null,
+                    'document_url' => $this->activeContract?->document_path ? (str_starts_with($this->activeContract->document_path, 'http') ? $this->activeContract->document_path : url('storage/'.$this->activeContract->document_path)) : null,
                 ];
             }),
         ];

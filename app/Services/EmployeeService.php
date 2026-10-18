@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Storage;
 class EmployeeService
 {
     public function __construct(
-        protected EmployeeRepositoryInterface $employeeRepository
+        protected EmployeeRepositoryInterface $employeeRepository,
+        protected CloudStorageService $cloudStorage
     ) {}
 
     /**
@@ -93,7 +94,7 @@ class EmployeeService
             if (! empty($data['basic_salary'])) {
                 $docPath = null;
                 if ($contractFile) {
-                    $docPath = $contractFile->store('contracts', 'public');
+                    $docPath = $this->cloudStorage->upload($contractFile, 'contracts');
                 }
 
                 EmploymentContract::create([
@@ -148,10 +149,10 @@ class EmployeeService
                 $docPath = $activeContract?->document_path;
 
                 if ($contractFile) {
-                    if ($docPath && Storage::disk('public')->exists($docPath)) {
+                    if ($docPath && ! str_starts_with($docPath, 'http') && Storage::disk('public')->exists($docPath)) {
                         Storage::disk('public')->delete($docPath);
                     }
-                    $docPath = $contractFile->store('contracts', 'public');
+                    $docPath = $this->cloudStorage->upload($contractFile, 'contracts');
                 }
 
                 if ($activeContract) {

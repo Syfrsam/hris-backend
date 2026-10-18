@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\DB;
 class LeaveService
 {
     public function __construct(
-        protected LeaveRepositoryInterface $leaveRepository
+        protected LeaveRepositoryInterface $leaveRepository,
+        protected CloudStorageService $cloudStorage
     ) {}
 
     /**
@@ -73,9 +74,9 @@ class LeaveService
                 throw new Exception('Format file bukti harus PDF, JPG, atau PNG.');
             }
 
-            $docPath = $attachment->store('leave_attachments', 'public');
+            $docPath = $this->cloudStorage->upload($attachment, 'leave_attachments');
         } elseif ($attachment) {
-            $docPath = $attachment->store('leave_attachments', 'public');
+            $docPath = $this->cloudStorage->upload($attachment, 'leave_attachments');
         }
 
         $requestNumber = 'LR-'.date('Ym').'-'.sprintf('%04d', rand(1, 9999));

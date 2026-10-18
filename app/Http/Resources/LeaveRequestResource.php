@@ -29,7 +29,7 @@ class LeaveRequestResource extends JsonResource
             'end_date' => $this->end_date?->toDateString(),
             'total_days' => (int) $this->total_days,
             'reason' => $this->reason,
-            'attachment_url' => $this->attachment_path ? url('storage/'.$this->attachment_path) : null,
+            'attachment_url' => $this->attachment_path ? (str_starts_with($this->attachment_path, 'http') ? $this->attachment_path : url('storage/'.$this->attachment_path)) : null,
             'status' => $this->status,
             'current_step' => $this->current_step,
             'approvals' => $this->approvals->map(function ($approval) {

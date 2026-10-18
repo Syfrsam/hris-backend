@@ -14,7 +14,8 @@ use Illuminate\Http\UploadedFile;
 class AttendanceService
 {
     public function __construct(
-        protected AttendanceRepositoryInterface $attendanceRepository
+        protected AttendanceRepositoryInterface $attendanceRepository,
+        protected CloudStorageService $cloudStorage
     ) {}
 
     /**
@@ -92,7 +93,7 @@ class AttendanceService
         // 5. Store selfie photo
         $photoPath = null;
         if ($photo) {
-            $photoPath = $photo->store('attendances/clock_in', 'public');
+            $photoPath = $this->cloudStorage->upload($photo, 'attendances/clock_in');
         }
 
         return $this->attendanceRepository->create([
@@ -148,7 +149,7 @@ class AttendanceService
 
         $photoPath = null;
         if ($photo) {
-            $photoPath = $photo->store('attendances/clock_out', 'public');
+            $photoPath = $this->cloudStorage->upload($photo, 'attendances/clock_out');
         }
 
         $attendance->update([
