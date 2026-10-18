@@ -151,5 +151,15 @@ class MasterDataSeeder extends Seeder
         foreach ($leaveTypes as $leave) {
             LeaveType::firstOrCreate(['code' => $leave['code']], $leave);
         }
+
+        \App\Models\PayrollPeriod::firstOrCreate(
+            ['name' => 'Payroll Periode '.now()->translatedFormat('F Y')],
+            [
+                'start_date' => now()->startOfMonth()->toDateString(),
+                'cutoff_date' => now()->startOfMonth()->addDays(24)->toDateString(),
+                'payment_date' => now()->startOfMonth()->addDays(27)->toDateString(),
+                'status' => 'draft',
+            ]
+        );
     }
 }

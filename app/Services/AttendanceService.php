@@ -176,13 +176,19 @@ class AttendanceService
         $totalLateMinutes = (int) $attendances->sum('late_minutes');
         $onTimeDays = $attendances->where('status', 'on_time')->count();
         $absentDays = $attendances->where('status', 'absent')->count();
+        $presentDays = $attendances->whereIn('status', ['on_time', 'late', 'early_leave'])->count();
+        $totalWorkMinutes = (int) $attendances->sum('work_duration_minutes');
 
         return [
             'total_days' => $attendances->count(),
+            'total_present' => $presentDays,
             'on_time_days' => $onTimeDays,
             'late_days' => $lateDays,
+            'total_late' => $lateDays,
             'total_late_minutes' => $totalLateMinutes,
             'absent_days' => $absentDays,
+            'total_work_minutes' => $totalWorkMinutes,
+            'total_work_hours' => round($totalWorkMinutes / 60, 1),
         ];
     }
 

@@ -135,8 +135,20 @@ class AttendanceController extends Controller
             ], 404);
         }
 
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+        $month = $request->input('month');
+        if ($month) {
+            try {
+                $parsed = Carbon::parse($month.'-01');
+                $startDate = $parsed->copy()->startOfMonth()->toDateString();
+                $endDate = $parsed->copy()->endOfMonth()->toDateString();
+            } catch (Exception) {
+                $startDate = Carbon::now()->startOfMonth()->toDateString();
+                $endDate = Carbon::now()->endOfMonth()->toDateString();
+            }
+        } else {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+            $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+        }
 
         $attendances = $this->attendanceRepository->getMonthlyAttendance($employee->id, $startDate, $endDate);
         $recap = $this->attendanceService->getMonthlyRecapFromCollection($attendances);

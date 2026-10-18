@@ -55,17 +55,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
         $query = $this->model
             ->with(['user', 'department', 'branch', 'jobPosition', 'manager', 'activeContract']);
 
-        if (! empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('nik', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($uq) use ($search) {
-                        $uq->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    });
-            });
-        }
-
+        // Apply fast indexed equality filters first
         if (! empty($filters['branch_id'])) {
             $query->where('branch_id', $filters['branch_id']);
         }
@@ -78,6 +68,18 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
             $query->where('employment_status', $filters['employment_status']);
         }
 
-        return $query->latest()->paginate($perPage);
+        // Apply search with indexed fields
+        if (! empty($filters['search'])) {
+            $search = trim($filters['search']);
+            $query->where(function ($q) use ($search) {
+                $q->where('nik', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->latest('id')->paginate($perPage);
     }
 }
