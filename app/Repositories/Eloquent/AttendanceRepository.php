@@ -30,6 +30,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
     public function getMonthlyAttendance(int $employeeId, string $startDate, string $endDate): Collection
     {
         return $this->model
+            ->with(['shift', 'employee.user'])
             ->where('employee_id', $employeeId)
             ->whereBetween('date', [$startDate, $endDate])
             ->orderBy('date', 'asc')

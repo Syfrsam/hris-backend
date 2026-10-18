@@ -19,7 +19,7 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
     public function getEmployeeOvertimeRequests(int $employeeId): Collection
     {
         return $this->model
-            ->with(['approvals.reviewer'])
+            ->with(['approvals.reviewer', 'employee.user', 'employee.department'])
             ->where('employee_id', $employeeId)
             ->latest()
             ->get();

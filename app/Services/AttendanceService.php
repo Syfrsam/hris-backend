@@ -166,14 +166,12 @@ class AttendanceService
     }
 
     /**
-     * Get monthly attendance recapitulation for payroll calculations.
+     * Calculate monthly attendance recapitulation directly from an existing collection.
      *
      * @return array{total_days: int, on_time_days: int, late_days: int, total_late_minutes: int, absent_days: int}
      */
-    public function getMonthlyRecap(int $employeeId, string $startDate, string $endDate): array
+    public function getMonthlyRecapFromCollection(Collection $attendances): array
     {
-        $attendances = $this->attendanceRepository->getMonthlyAttendance($employeeId, $startDate, $endDate);
-
         $lateDays = $attendances->where('status', 'late')->count();
         $totalLateMinutes = (int) $attendances->sum('late_minutes');
         $onTimeDays = $attendances->where('status', 'on_time')->count();
@@ -186,6 +184,18 @@ class AttendanceService
             'total_late_minutes' => $totalLateMinutes,
             'absent_days' => $absentDays,
         ];
+    }
+
+    /**
+     * Get monthly attendance recapitulation for payroll calculations.
+     *
+     * @return array{total_days: int, on_time_days: int, late_days: int, total_late_minutes: int, absent_days: int}
+     */
+    public function getMonthlyRecap(int $employeeId, string $startDate, string $endDate): array
+    {
+        $attendances = $this->attendanceRepository->getMonthlyAttendance($employeeId, $startDate, $endDate);
+
+        return $this->getMonthlyRecapFromCollection($attendances);
     }
 
     /**

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\JobPositionController;
@@ -27,7 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-    // Master Data: Departments & Job Positions (Read for all, Write for HR/Superadmin)
+    // Master Data: Branches, Departments & Job Positions (Read for all, Write for HR/Superadmin)
+    Route::get('branches', [BranchController::class, 'index']);
+    Route::get('branches/{branch}', [BranchController::class, 'show']);
     Route::get('departments', [DepartmentController::class, 'index']);
     Route::get('departments/{department}', [DepartmentController::class, 'show']);
     Route::get('job-positions/options', [JobPositionController::class, 'options']);
@@ -35,6 +38,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('job-positions/{job_position}', [JobPositionController::class, 'show']);
 
     Route::middleware('role:HR Staff|HR Manager|Superadmin')->group(function () {
+        Route::post('branches', [BranchController::class, 'store']);
+        Route::put('branches/{branch}', [BranchController::class, 'update']);
+        Route::delete('branches/{branch}', [BranchController::class, 'destroy']);
+
         Route::post('departments', [DepartmentController::class, 'store']);
         Route::put('departments/{department}', [DepartmentController::class, 'update']);
         Route::delete('departments/{department}', [DepartmentController::class, 'destroy']);

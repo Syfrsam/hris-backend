@@ -20,7 +20,7 @@ class LeaveRepository extends BaseRepository implements LeaveRepositoryInterface
     public function getEmployeeLeaveRequests(int $employeeId): Collection
     {
         return $this->model
-            ->with(['leaveType', 'approvals.reviewer'])
+            ->with(['leaveType', 'approvals.reviewer', 'employee.user', 'employee.department'])
             ->where('employee_id', $employeeId)
             ->latest()
             ->get();

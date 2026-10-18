@@ -139,13 +139,13 @@ class AttendanceController extends Controller
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
 
         $attendances = $this->attendanceRepository->getMonthlyAttendance($employee->id, $startDate, $endDate);
-        $recap = $this->attendanceService->getMonthlyRecap($employee->id, $startDate, $endDate);
+        $recap = $this->attendanceService->getMonthlyRecapFromCollection($attendances);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'summary' => $recap,
-                'records' => AttendanceResource::collection($attendances->load('shift')),
+                'records' => AttendanceResource::collection($attendances),
             ],
         ]);
     }
