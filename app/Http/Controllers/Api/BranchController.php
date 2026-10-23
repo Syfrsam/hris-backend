@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BranchController extends Controller
 {
@@ -14,7 +15,7 @@ class BranchController extends Controller
      */
     public function index(): JsonResponse
     {
-        $branches = Branch::withCount('employees')->orderBy('id', 'asc')->get();
+        $branches = Cache::remember('master.branches', 300, fn () => Branch::withCount('employees')->orderBy('id', 'asc')->get());
 
         return response()->json([
             'success' => true,
@@ -42,6 +43,8 @@ class BranchController extends Controller
         $validated['is_active'] = $validated['is_active'] ?? true;
 
         $branch = Branch::create($validated);
+        Cache::forget('master.branches');
+        Cache::forget('master.job_position_options');
 
         return response()->json([
             'success' => true,
@@ -82,6 +85,8 @@ class BranchController extends Controller
         ]);
 
         $branch->update($validated);
+        Cache::forget('master.branches');
+        Cache::forget('master.job_position_options');
 
         return response()->json([
             'success' => true,
@@ -105,6 +110,8 @@ class BranchController extends Controller
         }
 
         $branch->delete();
+        Cache::forget('master.branches');
+        Cache::forget('master.job_position_options');
 
         return response()->json([
             'success' => true,

@@ -8,6 +8,7 @@ use App\Models\JobGrade;
 use App\Models\JobPosition;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class JobPositionController extends Controller
 {
@@ -16,9 +17,9 @@ class JobPositionController extends Controller
      */
     public function index(): JsonResponse
     {
-        $positions = JobPosition::with(['department', 'jobGrade'])
+        $positions = Cache::remember('master.job_positions', 300, fn () => JobPosition::with(['department', 'jobGrade'])
             ->withCount('employees')
-            ->get();
+            ->get());
 
         return response()->json([
             'success' => true,
@@ -38,6 +39,8 @@ class JobPositionController extends Controller
         ]);
 
         $position = JobPosition::create($validated);
+        Cache::forget('master.job_positions');
+        Cache::forget('master.departments');
 
         return response()->json([
             'success' => true,
@@ -73,6 +76,8 @@ class JobPositionController extends Controller
         ]);
 
         $position->update($validated);
+        Cache::forget('master.job_positions');
+        Cache::forget('master.departments');
 
         return response()->json([
             'success' => true,
@@ -96,6 +101,8 @@ class JobPositionController extends Controller
         }
 
         $position->delete();
+        Cache::forget('master.job_positions');
+        Cache::forget('master.departments');
 
         return response()->json([
             'success' => true,
@@ -108,12 +115,14 @@ class JobPositionController extends Controller
      */
     public function options(): JsonResponse
     {
+        $options = Cache::remember('master.job_position_options', 300, fn () => [
+            'branches' => Branch::where('is_active', true)->get(['id', 'code', 'name', 'radius_meters']),
+            'grades' => JobGrade::orderBy('level')->get(['id', 'name', 'level', 'min_salary', 'max_salary']),
+        ]);
+
         return response()->json([
             'success' => true,
-            'data' => [
-                'branches' => Branch::where('is_active', true)->get(['id', 'code', 'name', 'radius_meters']),
-                'grades' => JobGrade::orderBy('level')->get(['id', 'name', 'level', 'min_salary', 'max_salary']),
-            ],
+            'data' => $options,
         ]);
     }
 }

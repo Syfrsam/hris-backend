@@ -11,7 +11,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        config(['sanctum.last_used_at' => false]);
     }
 
     /**

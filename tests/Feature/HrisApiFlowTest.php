@@ -113,4 +113,57 @@ class HrisApiFlowTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
     }
+
+    /**
+     * Test Superadmin exclusive user & role management endpoints.
+     */
+    public function test_superadmin_user_role_management_and_rbac(): void
+    {
+        $superadmin = User::where('email', 'superadmin@hris.local')->first();
+        $hrManager = User::where('email', 'hrmanager@hris.local')->first();
+        $employee = User::where('email', 'employee@hris.local')->first();
+
+        // Non-Superadmin must be forbidden (403)
+        $this->actingAs($hrManager, 'sanctum')
+            ->getJson('/api/users')
+            ->assertStatus(403);
+
+        // Superadmin can list all users and roles
+        $listResponse = $this->actingAs($superadmin, 'sanctum')
+            ->getJson('/api/users');
+
+        $listResponse->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'users',
+                    'available_roles',
+                ],
+            ]);
+
+        // Superadmin cannot deactivate or strip Superadmin role from own account
+        $this->actingAs($superadmin, 'sanctum')
+            ->putJson('/api/users/'.$superadmin->id, [
+                'role' => 'Employee',
+            ])
+            ->assertStatus(422);
+
+        // Superadmin can update another user's role and restore it
+        $updateResponse = $this->actingAs($superadmin, 'sanctum')
+            ->putJson('/api/users/'.$employee->id, [
+                'role' => 'HR Staff',
+            ]);
+
+        $updateResponse->assertStatus(200)
+            ->assertJsonPath('data.primary_role', 'HR Staff');
+
+        // Restore original role so database state stays clean
+        $this->actingAs($superadmin, 'sanctum')
+            ->putJson('/api/users/'.$employee->id, [
+                'role' => 'Employee',
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.primary_role', 'Employee');
+    }
 }

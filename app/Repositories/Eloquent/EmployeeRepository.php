@@ -20,7 +20,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     public function findByNik(string $nik): ?Employee
     {
         return $this->model
-            ->with(['user', 'department', 'branch', 'jobPosition', 'manager', 'activeContract'])
+            ->with(['user.roles', 'department', 'branch', 'jobPosition.jobGrade', 'manager.user', 'activeContract'])
             ->where('nik', $nik)
             ->first();
     }
@@ -31,7 +31,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     public function findByUserId(int $userId): ?Employee
     {
         return $this->model
-            ->with(['user', 'department', 'branch', 'jobPosition', 'manager', 'activeContract'])
+            ->with(['user.roles', 'department', 'branch', 'jobPosition.jobGrade', 'manager.user', 'activeContract'])
             ->where('user_id', $userId)
             ->first();
     }
@@ -42,7 +42,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     public function getSubordinates(int $managerId): Collection
     {
         return $this->model
-            ->with(['user', 'department', 'jobPosition', 'activeContract'])
+            ->with(['user.roles', 'department', 'jobPosition.jobGrade', 'manager.user', 'activeContract'])
             ->where('manager_id', $managerId)
             ->get();
     }
@@ -53,7 +53,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     public function filterEmployees(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         $query = $this->model
-            ->with(['user', 'department', 'branch', 'jobPosition', 'manager', 'activeContract']);
+            ->with(['user.roles', 'department', 'branch', 'jobPosition.jobGrade', 'manager.user', 'activeContract']);
 
         // Apply fast indexed equality filters first
         if (! empty($filters['branch_id'])) {

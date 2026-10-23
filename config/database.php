@@ -47,7 +47,9 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
+            'host' => filter_var($dbHost = env('DB_HOST', '127.0.0.1'), FILTER_VALIDATE_IP)
+                ? $dbHost
+                : gethostbyname($dbHost),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
@@ -58,11 +60,17 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
+            'version' => '8.0.11',
+            'use_db_after_connecting' => false,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
+            'options' => extension_loaded('pdo_mysql') ? array_replace([
+                PDO::ATTR_EMULATE_PREPARES => true,
+                PDO::ATTR_TIMEOUT => 5,
+                Mysql::ATTR_SSL_VERIFY_SERVER_CERT => env('DB_SSL_VERIFY', false),
+            ], array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA') ? (file_exists(env('MYSQL_ATTR_SSL_CA')) ? env('MYSQL_ATTR_SSL_CA') : base_path(env('MYSQL_ATTR_SSL_CA'))) : null,
                 PDO::ATTR_PERSISTENT => env('DB_PERSISTENT', false),
-            ]) : [],
+            ])) : [],
         ],
 
         'mariadb' => [

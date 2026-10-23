@@ -118,7 +118,7 @@ class AttendanceController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $attendance ? new AttendanceResource($attendance->load(['shift', 'employee.user'])) : null,
+            'data' => $attendance ? new AttendanceResource($attendance) : null,
         ]);
     }
 

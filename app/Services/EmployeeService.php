@@ -9,6 +9,7 @@ use App\Repositories\Contracts\EmployeeRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -109,7 +110,11 @@ class EmployeeService
                 ]);
             }
 
-            return $employee->load(['user', 'department', 'branch', 'jobPosition', 'activeContract']);
+            Cache::forget('master.branches');
+            Cache::forget('master.departments');
+            Cache::forget('master.job_positions');
+
+            return $employee->load(['user.roles', 'department', 'branch', 'jobPosition.jobGrade', 'manager.user', 'activeContract']);
         });
     }
 
@@ -163,7 +168,11 @@ class EmployeeService
                 }
             }
 
-            return $employee->fresh(['user', 'department', 'branch', 'jobPosition', 'activeContract']);
+            Cache::forget('master.branches');
+            Cache::forget('master.departments');
+            Cache::forget('master.job_positions');
+
+            return $employee->fresh(['user.roles', 'department', 'branch', 'jobPosition.jobGrade', 'manager.user', 'activeContract']);
         });
     }
 

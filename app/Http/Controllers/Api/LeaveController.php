@@ -11,6 +11,7 @@ use App\Services\LeaveService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class LeaveController extends Controller
 {
@@ -24,7 +25,7 @@ class LeaveController extends Controller
      */
     public function leaveTypes(): JsonResponse
     {
-        $types = LeaveType::where('is_active', true)->get();
+        $types = Cache::remember('master.leave_types', 300, fn () => LeaveType::where('is_active', true)->get());
 
         return response()->json([
             'success' => true,

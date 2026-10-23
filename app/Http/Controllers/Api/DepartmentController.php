@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DepartmentController extends Controller
 {
@@ -14,7 +15,7 @@ class DepartmentController extends Controller
      */
     public function index(): JsonResponse
     {
-        $departments = Department::withCount(['jobPositions', 'employees'])->get();
+        $departments = Cache::remember('master.departments', 300, fn () => Department::withCount(['jobPositions', 'employees'])->get());
 
         return response()->json([
             'success' => true,
@@ -33,6 +34,7 @@ class DepartmentController extends Controller
         ]);
 
         $department = Department::create($validated);
+        Cache::forget('master.departments');
 
         return response()->json([
             'success' => true,
@@ -67,6 +69,8 @@ class DepartmentController extends Controller
         ]);
 
         $department->update($validated);
+        Cache::forget('master.departments');
+        Cache::forget('master.job_positions');
 
         return response()->json([
             'success' => true,
@@ -90,6 +94,7 @@ class DepartmentController extends Controller
         }
 
         $department->delete();
+        Cache::forget('master.departments');
 
         return response()->json([
             'success' => true,

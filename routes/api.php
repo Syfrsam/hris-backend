@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\JobPositionController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\PayrollController;
+use App\Http\Controllers\Api\UserRoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,6 +28,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Session & Profile
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // Superadmin Exclusive: User & Role Management
+    Route::middleware('role:Superadmin')->prefix('users')->group(function () {
+        Route::get('/', [UserRoleController::class, 'index']);
+        Route::post('/', [UserRoleController::class, 'store']);
+        Route::put('/{user}', [UserRoleController::class, 'update']);
+    });
 
     // Master Data: Branches, Departments & Job Positions (Read for all, Write for HR/Superadmin)
     Route::get('branches', [BranchController::class, 'index']);

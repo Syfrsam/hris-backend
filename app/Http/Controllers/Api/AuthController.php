@@ -25,11 +25,13 @@ class AuthController extends Controller
         ]);
 
         $user = User::with([
-            'roles',
+            'roles.permissions',
+            'permissions',
             'employee.department',
             'employee.branch',
-            'employee.jobPosition',
+            'employee.jobPosition.jobGrade',
             'employee.manager.user',
+            'employee.activeContract',
         ])->where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -65,7 +67,8 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user()->load([
-            'roles',
+            'roles.permissions',
+            'permissions',
             'employee.department',
             'employee.branch',
             'employee.jobPosition.jobGrade',

@@ -19,6 +19,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
     public function findTodayAttendance(int $employeeId, string $date): ?Attendance
     {
         return $this->model
+            ->with(['shift', 'employee.user'])
             ->where('employee_id', $employeeId)
             ->where('date', $date)
             ->first();
@@ -59,7 +60,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
     public function getTeamAttendance(array $subordinateEmployeeIds, string $date): Collection
     {
         return $this->model
-            ->with(['employee.user', 'shift'])
+            ->with(['employee.user', 'employee.department', 'employee.jobPosition', 'shift'])
             ->whereIn('employee_id', $subordinateEmployeeIds)
             ->where('date', $date)
             ->get();
