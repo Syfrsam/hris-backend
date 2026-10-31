@@ -30,6 +30,21 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Get the next recommended unique NIK.
+     */
+    public function nextNik(): JsonResponse
+    {
+        $nik = $this->employeeService->generateNextNik();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'nik' => $nik,
+            ],
+        ]);
+    }
+
+    /**
      * Store a newly created employee profile and account.
      */
     public function store(Request $request): JsonResponse
@@ -44,7 +59,7 @@ class EmployeeController extends Controller
             'department_id' => ['required', 'exists:departments,id'],
             'job_position_id' => ['required', 'exists:job_positions,id'],
             'manager_id' => ['nullable', 'exists:employees,id'],
-            'nik' => ['required', 'string', 'max:30', 'unique:employees,nik'],
+            'nik' => ['nullable', 'string', 'max:30', 'unique:employees,nik'],
             'ktp_number' => ['required', 'string', 'max:20', 'unique:employees,ktp_number'],
             'gender' => ['required', 'in:male,female'],
             'birth_date' => ['required', 'date'],
@@ -61,12 +76,14 @@ class EmployeeController extends Controller
             'contract_number' => ['nullable', 'string', 'max:50', 'unique:employment_contracts,contract_number'],
             'contract_end_date' => ['nullable', 'date'],
             'contract_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
         ]);
 
         try {
             $employee = $this->employeeService->createEmployee(
                 $validated,
-                $request->file('contract_file')
+                $request->file('contract_file'),
+                $request->file('avatar')
             );
 
             return response()->json([
@@ -122,13 +139,15 @@ class EmployeeController extends Controller
             'resign_date' => ['nullable', 'date'],
             'basic_salary' => ['nullable', 'numeric', 'min:0'],
             'contract_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
         ]);
 
         try {
             $employee = $this->employeeService->updateEmployee(
                 $id,
                 $validated,
-                $request->file('contract_file')
+                $request->file('contract_file'),
+                $request->file('avatar')
             );
 
             return response()->json([

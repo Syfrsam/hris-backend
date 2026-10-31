@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+require_once __DIR__ . '/MonthlyAttendanceSeeder.php';
+
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
@@ -18,6 +20,7 @@ class DatabaseSeeder extends Seeder
             RoleAndPermissionSeeder::class,
             MasterDataSeeder::class,
             DemoEmployeeSeeder::class,
+            MonthlyAttendanceSeeder::class,
         ]);
     }
 }

@@ -19,6 +19,21 @@ class AttendanceResource extends JsonResource
             'employee_id' => $this->employee_id,
             'employee_name' => $this->employee?->user?->name,
             'nik' => $this->employee?->nik,
+            'department' => $this->employee?->department?->name,
+            'employee' => $this->employee ? [
+                'id' => $this->employee->id,
+                'nik' => $this->employee->nik,
+                'user' => [
+                    'name' => $this->employee->user?->name,
+                    'avatar_url' => $this->employee->user?->avatar_url,
+                ],
+                'department' => [
+                    'name' => $this->employee->department?->name,
+                ],
+                'job_position' => [
+                    'title' => $this->employee->jobPosition?->title,
+                ],
+            ] : null,
             'date' => $this->date?->toDateString(),
             'shift' => [
                 'name' => $this->shift?->name,

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\JobPositionController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\PayrollController;
+use App\Http\Controllers\Api\PenaltySettingController;
 use App\Http\Controllers\Api\UserRoleController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,14 +28,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User Session & Profile
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/auth/avatar', [AuthController::class, 'updateAvatar']);
+    Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/auth/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/auth/password', [AuthController::class, 'updatePassword']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-    // Superadmin Exclusive: User & Role Management
+    // Superadmin Exclusive: User & Role Management & Penalty Rules
     Route::middleware('role:Superadmin')->prefix('users')->group(function () {
         Route::get('/', [UserRoleController::class, 'index']);
         Route::post('/', [UserRoleController::class, 'store']);
         Route::put('/{user}', [UserRoleController::class, 'update']);
     });
+
+    // Company Settings: Penalty & Deductions
+    Route::get('settings/penalty', [PenaltySettingController::class, 'show']);
+    Route::middleware('role:Superadmin')->put('settings/penalty', [PenaltySettingController::class, 'update']);
 
     // Master Data: Branches, Departments & Job Positions (Read for all, Write for HR/Superadmin)
     Route::get('branches', [BranchController::class, 'index']);
@@ -58,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('job-positions/{job_position}', [JobPositionController::class, 'update']);
         Route::delete('job-positions/{job_position}', [JobPositionController::class, 'destroy']);
 
+        Route::get('employees/next-nik', [EmployeeController::class, 'nextNik']);
         Route::get('employees', [EmployeeController::class, 'index']);
         Route::post('employees', [EmployeeController::class, 'store']);
         Route::get('employees/{employee}', [EmployeeController::class, 'show']);
@@ -92,6 +102,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/balances', [LeaveController::class, 'balances']);
         Route::get('/', [LeaveController::class, 'index']);
         Route::post('/', [LeaveController::class, 'store']);
+
+        Route::middleware('role:Superadmin|HR Manager')->group(function () {
+            Route::get('/types/all', [LeaveController::class, 'allLeaveTypes']);
+            Route::post('/types', [LeaveController::class, 'storeLeaveType']);
+            Route::put('/types/{leaveType}', [LeaveController::class, 'updateLeaveType']);
+            Route::delete('/types/{leaveType}', [LeaveController::class, 'deleteLeaveType']);
+        });
     });
 
     // Overtime Management (Employee Self-Service)

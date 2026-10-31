@@ -48,19 +48,55 @@ class EmployeeService
     }
 
     /**
+     * Generate the next unique Employee Identification Number (NIK) for the current year.
+     * Format: EMP-YYYY-001, EMP-YYYY-002, etc.
+     */
+    public function generateNextNik(?int $year = null): string
+    {
+        $year = $year ?? (int) date('Y');
+        $prefix = "EMP-{$year}-";
+
+        $niks = Employee::where('nik', 'like', "{$prefix}%")->pluck('nik');
+        $maxSeq = 0;
+        foreach ($niks as $nik) {
+            if (preg_match('/^EMP-\d{4}-(\d+)$/', $nik, $matches)) {
+                $seq = (int) $matches[1];
+                if ($seq > $maxSeq) {
+                    $maxSeq = $seq;
+                }
+            }
+        }
+
+        $nextNumber = $maxSeq + 1;
+
+        return sprintf('%s%03d', $prefix, $nextNumber);
+    }
+
+    /**
      * Create an employee profile along with user account, role, and employment contract.
      *
      * @param  array<string, mixed>  $data
      */
-    public function createEmployee(array $data, ?UploadedFile $contractFile = null): Employee
+    public function createEmployee(array $data, ?UploadedFile $contractFile = null, ?UploadedFile $avatarFile = null): Employee
     {
-        return DB::transaction(function () use ($data, $contractFile) {
+        return DB::transaction(function () use ($data, $contractFile, $avatarFile) {
+            // Auto-generate NIK if not provided or set to AUTO
+            if (empty($data['nik']) || strtoupper(trim($data['nik'])) === 'AUTO') {
+                $data['nik'] = $this->generateNextNik();
+            }
+
+            $avatarUrl = null;
+            if ($avatarFile) {
+                $avatarUrl = $this->cloudStorage->upload($avatarFile, 'avatars');
+            }
+
             // 1. Create User account
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => bcrypt($data['password'] ?? 'password123'),
                 'phone' => $data['phone'] ?? null,
+                'avatar_url' => $avatarUrl,
                 'is_active' => true,
             ]);
 
@@ -123,22 +159,23 @@ class EmployeeService
      *
      * @param  array<string, mixed>  $data
      */
-    public function updateEmployee(int $id, array $data, ?UploadedFile $contractFile = null): Employee
+    public function updateEmployee(int $id, array $data, ?UploadedFile $contractFile = null, ?UploadedFile $avatarFile = null): Employee
     {
-        return DB::transaction(function () use ($id, $data, $contractFile) {
+        return DB::transaction(function () use ($id, $data, $contractFile, $avatarFile) {
             $employee = $this->employeeRepository->findOrFail($id);
 
             // Update associated user data
-            if (isset($data['name']) || isset($data['email']) || isset($data['phone'])) {
-                $userData = array_filter([
-                    'name' => $data['name'] ?? null,
-                    'email' => $data['email'] ?? null,
-                    'phone' => $data['phone'] ?? null,
-                ]);
+            $userData = [];
+            if (isset($data['name'])) $userData['name'] = $data['name'];
+            if (isset($data['email'])) $userData['email'] = $data['email'];
+            if (isset($data['phone'])) $userData['phone'] = $data['phone'];
 
-                if (! empty($userData)) {
-                    $employee->user->update($userData);
-                }
+            if ($avatarFile) {
+                $userData['avatar_url'] = $this->cloudStorage->upload($avatarFile, 'avatars');
+            }
+
+            if (! empty($userData)) {
+                $employee->user->update($userData);
             }
 
             if (! empty($data['role'])) {

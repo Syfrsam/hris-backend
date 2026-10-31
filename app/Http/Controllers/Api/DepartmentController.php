@@ -15,7 +15,7 @@ class DepartmentController extends Controller
      */
     public function index(): JsonResponse
     {
-        $departments = Cache::remember('master.departments', 300, fn () => Department::withCount(['jobPositions', 'employees'])->get());
+        $departments = Department::withCount(['jobPositions', 'employees'])->get();
 
         return response()->json([
             'success' => true,

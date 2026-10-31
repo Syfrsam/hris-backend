@@ -15,7 +15,7 @@ class BranchController extends Controller
      */
     public function index(): JsonResponse
     {
-        $branches = Cache::remember('master.branches', 300, fn () => Branch::withCount('employees')->orderBy('id', 'asc')->get());
+        $branches = Branch::withCount('employees')->orderBy('id', 'asc')->get();
 
         return response()->json([
             'success' => true,

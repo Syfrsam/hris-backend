@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\PayrollPeriod;
+use App\Models\PenaltySetting;
 use App\Repositories\Contracts\PayrollRepositoryInterface;
 use Carbon\Carbon;
 use Exception;
@@ -102,12 +103,59 @@ class PayrollService
             $period->cutoff_date
         );
 
-        $totalLateMinutes = $attendanceRecap['total_late_minutes'];
+        $totalLateMinutes = $attendanceRecap['total_late_minutes'] ?? 0;
+        $absentDays = $attendanceRecap['absent_days'] ?? 0;
 
-        // Potongan Keterlambatan: 1 menit = Gaji Pokok / (21 hari kerja * 8 jam * 60 menit)
-        $standardWorkMinutesPerMonth = 21 * 8 * 60;
-        $ratePerMinute = $standardWorkMinutesPerMonth > 0 ? ($basicSalary / $standardWorkMinutesPerMonth) : 0;
-        $lateDeductionAmount = round($totalLateMinutes * $ratePerMinute, 2);
+        // Ambil aturan denda aktif dari pengaturan Superadmin
+        $penaltySetting = PenaltySetting::getActive();
+
+        // 1.1 Potongan Keterlambatan sesuai skema pengaturan
+        $lateDeductionAmount = 0.0;
+        $lateItemName = "Denda Keterlambatan ({$totalLateMinutes} menit)";
+
+        if ($penaltySetting->is_active && $totalLateMinutes > 0) {
+            switch ($penaltySetting->late_penalty_type) {
+                case 'hourly_rate':
+                    // Tarif flat per jam dihitung pro-rata menit presensi
+                    $ratePerHour = (float) $penaltySetting->hourly_rate;
+                    $lateDeductionAmount = round(($totalLateMinutes / 60) * $ratePerHour, 2);
+                    $lateItemName = "Denda Keterlambatan ({$totalLateMinutes} menit @ Rp " . number_format($ratePerHour, 0, ',', '.') . "/jam)";
+                    break;
+
+                case 'fixed_per_incident':
+                    $lateDays = $attendanceRecap['late_days'] ?? 0;
+                    $incidentRate = (float) $penaltySetting->incident_rate;
+                    $lateDeductionAmount = round($lateDays * $incidentRate, 2);
+                    $lateItemName = "Denda Keterlambatan ({$lateDays} kejadian @ Rp " . number_format($incidentRate, 0, ',', '.') . ")";
+                    break;
+
+                case 'salary_proportional':
+                    // Formula Depnaker: 1 menit = Gaji Pokok / (21 hari kerja * 8 jam * 60 menit)
+                    $standardWorkMinutesPerMonth = 21 * 8 * 60;
+                    $ratePerMinute = $standardWorkMinutesPerMonth > 0 ? ($basicSalary / $standardWorkMinutesPerMonth) : 0;
+                    $lateDeductionAmount = round($totalLateMinutes * $ratePerMinute, 2);
+                    $lateItemName = "Denda Keterlambatan ({$totalLateMinutes} menit - Proporsional Gaji)";
+                    break;
+
+                case 'none':
+                default:
+                    $lateDeductionAmount = 0.0;
+                    break;
+            }
+        }
+
+        // 1.2 Potongan Ketidakhadiran (Alpa)
+        $absentDeductionAmount = 0.0;
+        if ($absentDays > 0) {
+            if ($penaltySetting->absent_penalty_type === 'fixed_daily') {
+                $absentDeductionAmount = round($absentDays * (float) $penaltySetting->absent_daily_amount, 2);
+            } else {
+                $standardWorkDays = 21;
+                $absentDeductionAmount = $standardWorkDays > 0
+                    ? round(($basicSalary / $standardWorkDays) * $absentDays, 2)
+                    : 0;
+            }
+        }
 
         // 2. Akumulasi jam lembur yang telah disetujui (Approved Overtime)
         $approvedOvertimes = $this->overtimeService->calculateDepnakerOvertimePay(
@@ -131,7 +179,7 @@ class PayrollService
         $grossIncome = $basicSalary + $allowanceAmount + $totalOvertimePay;
         $taxPph21 = round($grossIncome > 4500000 ? ($grossIncome * 0.05) : 0, 2);
 
-        $totalDeductions = $lateDeductionAmount + $bpjsKesehatan + $bpjsKetenagakerjaan + $taxPph21;
+        $totalDeductions = round($lateDeductionAmount + $absentDeductionAmount + $bpjsKesehatan + $bpjsKetenagakerjaan + $taxPph21, 2);
         $netSalary = max(0, round($grossIncome - $totalDeductions, 2));
 
         $payslipNumber = 'SLIP-'.date('Ym', strtotime($period->start_date)).'-'.sprintf('%04d', $employee->id);
@@ -164,9 +212,17 @@ class PayrollService
 
         if ($lateDeductionAmount > 0) {
             $items[] = [
-                'name' => "Denda Keterlambatan ({$totalLateMinutes} menit)",
+                'name' => $lateItemName,
                 'type' => 'deduction',
                 'amount' => $lateDeductionAmount,
+            ];
+        }
+
+        if ($absentDeductionAmount > 0) {
+            $items[] = [
+                'name' => "Potongan Ketidakhadiran ({$absentDays} hari)",
+                'type' => 'deduction',
+                'amount' => $absentDeductionAmount,
             ];
         }
 

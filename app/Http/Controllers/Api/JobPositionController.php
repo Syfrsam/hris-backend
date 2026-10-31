@@ -17,9 +17,9 @@ class JobPositionController extends Controller
      */
     public function index(): JsonResponse
     {
-        $positions = Cache::remember('master.job_positions', 300, fn () => JobPosition::with(['department', 'jobGrade'])
+        $positions = JobPosition::with(['department', 'jobGrade'])
             ->withCount('employees')
-            ->get());
+            ->get();
 
         return response()->json([
             'success' => true,

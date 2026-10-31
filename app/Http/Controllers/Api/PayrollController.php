@@ -176,7 +176,7 @@ class PayrollController extends Controller
     /**
      * Download digital payslip as PDF (generated via DomPDF).
      */
-    public function downloadPdf(int $id): Response|JsonResponse
+    public function downloadPdf(Request $request, int $id): Response|JsonResponse
     {
         $payroll = $this->payrollService->getPayslipDetail($id);
 
@@ -188,7 +188,12 @@ class PayrollController extends Controller
         }
 
         $pdf = Pdf::loadView('pdf.payslip', ['payroll' => $payroll]);
+        $filename = 'Slip_Gaji_'.$payroll->payslip_number.'.pdf';
 
-        return $pdf->download('Slip_Gaji_'.$payroll->payslip_number.'.pdf');
+        if ($request->query('mode') === 'view') {
+            return $pdf->stream($filename);
+        }
+
+        return $pdf->download($filename);
     }
 }

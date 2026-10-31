@@ -34,7 +34,7 @@ class EmployeeResource extends JsonResource
                 'name' => $this->user?->name,
                 'email' => $this->user?->email,
                 'phone' => $this->user?->phone,
-                'avatar_url' => $this->user?->avatar_url ? url('storage/'.$this->user->avatar_url) : null,
+                'avatar_url' => $this->user?->avatar_url ? (str_starts_with($this->user->avatar_url, 'http') ? $this->user->avatar_url : url('storage/'.$this->user->avatar_url)) : null,
                 'roles' => $this->user?->getRoleNames(),
             ],
             'department' => $this->whenLoaded('department', function () {

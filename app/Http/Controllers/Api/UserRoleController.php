@@ -58,12 +58,19 @@ class UserRoleController extends Controller
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', 'string', Rule::in(self::ALLOWED_ROLES)],
             'is_active' => ['sometimes', 'boolean'],
+            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
         ]);
+
+        $avatarUrl = null;
+        if ($request->hasFile('avatar')) {
+            $avatarUrl = app(\App\Services\CloudStorageService::class)->upload($request->file('avatar'), 'avatars');
+        }
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
+            'avatar_url' => $avatarUrl,
             'password' => Hash::make($validated['password']),
             'is_active' => $validated['is_active'] ?? true,
             'email_verified_at' => now(),
@@ -93,6 +100,7 @@ class UserRoleController extends Controller
             'password' => ['nullable', 'string', 'min:6'],
             'role' => ['sometimes', 'required', 'string', Rule::in(self::ALLOWED_ROLES)],
             'is_active' => ['sometimes', 'boolean'],
+            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
         ]);
 
         $currentUser = $request->user();
@@ -118,6 +126,10 @@ class UserRoleController extends Controller
             if (array_key_exists($field, $validated)) {
                 $updates[$field] = $validated[$field];
             }
+        }
+
+        if ($request->hasFile('avatar')) {
+            $updates['avatar_url'] = app(\App\Services\CloudStorageService::class)->upload($request->file('avatar'), 'avatars');
         }
 
         if (! empty($validated['password'])) {
@@ -160,6 +172,7 @@ class UserRoleController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
+            'avatar_url' => $user->avatar_url ? (str_starts_with($user->avatar_url, 'http') ? $user->avatar_url : url('storage/'.$user->avatar_url)) : null,
             'is_active' => (bool) $user->is_active,
             'roles' => $roleNames,
             'primary_role' => $roleNames[0] ?? 'Employee',

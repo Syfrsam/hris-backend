@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AttendanceResource;
 use App\Repositories\Contracts\AttendanceRepositoryInterface;
 use App\Services\AttendanceService;
+use App\Models\Attendance;
+use App\Models\Employee;
+use App\Models\PenaltySetting;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -169,35 +172,80 @@ class AttendanceController extends Controller
     {
         $date = $request->input('date', Carbon::today()->toDateString());
         $anomalies = $this->attendanceService->getDailyAnomalies($date);
+        $penaltySetting = PenaltySetting::getActive();
 
         return response()->json([
             'success' => true,
             'date' => $date,
+            'penalty_setting' => $penaltySetting,
             'data' => AttendanceResource::collection($anomalies),
         ]);
     }
 
     /**
-     * Get real-time attendance of team members for Manager dashboard.
+     * Get real-time or historical attendance of team members for Manager / HR / Superadmin.
      */
     public function teamAttendance(Request $request): JsonResponse
     {
-        $manager = $request->user()->employee;
-        if (! $manager) {
+        $user = $request->user();
+        $manager = $user->employee;
+
+        $isGlobal = $user->hasRole('Superadmin') || $user->hasRole('HR Manager') || $user->hasRole('HR Staff');
+
+        if (! $isGlobal && ! $manager && ! $user->hasRole('Manager')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hanya akun manajer yang dapat melihat absensi tim.',
+                'message' => 'Hanya akun manajer atau HR yang dapat melihat presensi tim.',
             ], 403);
         }
 
-        $subordinateIds = $manager->subordinates()->pluck('id')->toArray();
-        $date = $request->input('date', Carbon::today()->toDateString());
+        if ($isGlobal) {
+            $subordinateIds = Employee::pluck('id')->toArray();
+        } elseif ($manager) {
+            $subordinateIds = $manager->subordinates()->pluck('id')->toArray();
+            if (empty($subordinateIds)) {
+                if ($manager->department_id) {
+                    $subordinateIds = Employee::where('department_id', $manager->department_id)->pluck('id')->toArray();
+                }
+                if (empty($subordinateIds)) {
+                    $subordinateIds = Employee::pluck('id')->toArray();
+                }
+            }
+        } else {
+            $subordinateIds = Employee::pluck('id')->toArray();
+        }
 
-        $attendances = $this->attendanceRepository->getTeamAttendance($subordinateIds, $date);
+        $query = Attendance::with(['employee.user', 'employee.department', 'employee.jobPosition', 'shift'])
+            ->whereIn('employee_id', $subordinateIds);
+
+        // Filter by month (e.g. 2026-10), start_date & end_date, or single date
+        if ($request->filled('month')) {
+            try {
+                $monthDate = Carbon::parse($request->input('month').'-01');
+                $start = $monthDate->copy()->startOfMonth()->toDateString();
+                $end = $monthDate->copy()->endOfMonth()->toDateString();
+                $query->whereBetween('date', [$start, $end]);
+            } catch (Exception) {
+                // ignore
+            }
+        } elseif ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('date', [$request->input('start_date'), $request->input('end_date')]);
+        } elseif ($request->filled('date')) {
+            $query->whereDate('date', $request->input('date'));
+        }
+
+        if ($request->filled('employee_id')) {
+            $query->where('employee_id', $request->input('employee_id'));
+        }
+
+        if ($request->filled('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->input('status'));
+        }
+
+        $attendances = $query->orderBy('date', 'desc')->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,
-            'date' => $date,
             'data' => AttendanceResource::collection($attendances),
         ]);
     }
