@@ -12,6 +12,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         config(['sanctum.last_used_at' => false]);
+
+        if (isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL']) || env('VERCEL')) {
+            if (!is_dir('/tmp/views')) {
+                @mkdir('/tmp/views', 0755, true);
+            }
+        }
     }
 
     /**
