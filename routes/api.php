@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\PenaltySettingController;
+use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\UserRoleController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('job-positions/options', [JobPositionController::class, 'options']);
     Route::get('job-positions', [JobPositionController::class, 'index']);
     Route::get('job-positions/{job_position}', [JobPositionController::class, 'show']);
+    Route::get('shifts', [ShiftController::class, 'index']);
+    Route::get('shifts/{shift}', [ShiftController::class, 'show']);
 
     Route::middleware('role:HR Staff|HR Manager|Superadmin')->group(function () {
         Route::post('branches', [BranchController::class, 'store']);
@@ -67,6 +70,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('job-positions', [JobPositionController::class, 'store']);
         Route::put('job-positions/{job_position}', [JobPositionController::class, 'update']);
         Route::delete('job-positions/{job_position}', [JobPositionController::class, 'destroy']);
+
+        Route::post('shifts', [ShiftController::class, 'store']);
+        Route::put('shifts/{shift}', [ShiftController::class, 'update']);
+        Route::delete('shifts/{shift}', [ShiftController::class, 'destroy']);
 
         Route::get('employees/next-nik', [EmployeeController::class, 'nextNik']);
         Route::get('employees', [EmployeeController::class, 'index']);
