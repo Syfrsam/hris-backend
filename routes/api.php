@@ -38,7 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:Superadmin')->prefix('users')->group(function () {
         Route::get('/', [UserRoleController::class, 'index']);
         Route::post('/', [UserRoleController::class, 'store']);
-        Route::put('/{user}', [UserRoleController::class, 'update']);
+        Route::match(['put', 'post'], '/{user}', [UserRoleController::class, 'update']);
+        Route::delete('/{user}', [UserRoleController::class, 'destroy']);
     });
 
     // Company Settings: Penalty & Deductions

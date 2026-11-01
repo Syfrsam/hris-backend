@@ -58,7 +58,7 @@ class UserRoleController extends Controller
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', 'string', Rule::in(self::ALLOWED_ROLES)],
             'is_active' => ['sometimes', 'boolean'],
-            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
+            'avatar' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
 
         $avatarUrl = null;
@@ -100,7 +100,7 @@ class UserRoleController extends Controller
             'password' => ['nullable', 'string', 'min:6'],
             'role' => ['sometimes', 'required', 'string', Rule::in(self::ALLOWED_ROLES)],
             'is_active' => ['sometimes', 'boolean'],
-            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
+            'avatar' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
 
         $currentUser = $request->user();
@@ -155,6 +155,28 @@ class UserRoleController extends Controller
             'success' => true,
             'message' => 'Data dan hak akses pengguna berhasil diperbarui.',
             'data' => $this->formatUser($user),
+        ]);
+    }
+
+    /**
+     * Delete user account (Superadmin only).
+     */
+    public function destroy(Request $request, User $user): JsonResponse
+    {
+        $currentUser = $request->user();
+        if ($currentUser && $currentUser->id === $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak dapat menghapus akun Anda sendiri.',
+            ], 422);
+        }
+
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Akun {$user->name} berhasil dihapus.",
         ]);
     }
 

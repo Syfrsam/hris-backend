@@ -75,8 +75,8 @@ class EmployeeController extends Controller
             'contract_type' => ['nullable', 'in:pkwt,pkwtt,internship'],
             'contract_number' => ['nullable', 'string', 'max:50', 'unique:employment_contracts,contract_number'],
             'contract_end_date' => ['nullable', 'date'],
-            'contract_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
+            'contract_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'avatar' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
 
         try {
@@ -138,8 +138,8 @@ class EmployeeController extends Controller
             'join_date' => ['nullable', 'date'],
             'resign_date' => ['nullable', 'date'],
             'basic_salary' => ['nullable', 'numeric', 'min:0'],
-            'contract_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
+            'contract_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'avatar' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
 
         try {

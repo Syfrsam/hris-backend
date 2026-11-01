@@ -102,7 +102,7 @@ class AuthController extends Controller
     public function updateAvatar(Request $request): JsonResponse
     {
         $request->validate([
-            'avatar' => ['required', 'file', 'image', 'max:1024'],
+            'avatar' => ['required', 'file', 'image', 'max:5120'],
         ]);
 
         $user = $request->user();
@@ -128,13 +128,13 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:50'],
-            'avatar' => ['nullable', 'file', 'image', 'max:1024'],
+            'avatar' => ['nullable', 'file', 'image', 'max:5120'],
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
             'email.email' => 'Format alamat email tidak valid.',
             'email.unique' => 'Alamat email sudah digunakan oleh pengguna lain.',
-            'avatar.max' => 'Ukuran foto maksimal 1 MB.',
+            'avatar.max' => 'Ukuran foto maksimal 5 MB.',
             'avatar.image' => 'File harus berupa gambar valid.',
         ]);
 
